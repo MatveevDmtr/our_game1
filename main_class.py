@@ -1,13 +1,20 @@
 import pygame
 from PIL import Image
 
+sprite_group_weapons = pygame.sprite.Group()
+tank = pygame.sprite.Sprite(sprite_group_weapons)
+rocket = pygame.sprite.Sprite(sprite_group_weapons)
+pvo = pygame.sprite.Sprite(sprite_group_weapons)
+tank.image = 'tank_1.jpg'
 
-class Weapon():
+
+class Weapon(pygame.weapon.Sprite):
     quit = False
     if_to_redraw_everything = False
-    def __init__(self, type_of_weapon, screen, location):
+    def __init__(self, *group, type_of_weapon, screen, location, side):
+        super().__init__(*group)
         self.type_of_weapon = type_of_weapon
-        #self.picture = picture
+        #self.image = weapon.image
         self.screen = screen
         self.location = location
         self.deleted = False

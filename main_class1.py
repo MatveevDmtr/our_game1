@@ -1,8 +1,10 @@
 import pygame
 from PIL import Image
 clock = pygame.time.Clock()
-velocity = 60
+velocity = 240
 fps = 60
+size_of_cell = 50
+
 
 
 sprite_group_weapons = pygame.sprite.Group()
@@ -16,7 +18,7 @@ tank.attack_radius = 1
 tank.harm_koef = 1
 tank.speed = 1
 tank.level = 1
-tank.image = Image.open('tank_1.jpg')
+tank.image = 'tank_1.jpg'
 
 # Инициализация параметров ПВО
 pvo = pygame.sprite.Sprite(sprite_group_weapons)
@@ -37,6 +39,9 @@ class Weapon(pygame.sprite.Sprite):
 
     def __init__(self, sprite, screen, location, side, *group):
         super().__init__(*group)
+        self.image = Image.open(sprite.image)
+        self.image = self.image.resize((size_of_cell, size_of_cell), Image.ANTIALIAS)
+        self.image = pygame.image.fromstring(self.image.tobytes(), self.image.size, "RGB")
         self.full_hp = sprite.full_hp
         self.hp = sprite.hp
         self.attack_radius = sprite.attack_radius
@@ -44,7 +49,6 @@ class Weapon(pygame.sprite.Sprite):
         self.speed = sprite.speed = 1
         self.level = 1
         self.side = 1
-        self.image = sprite.image
         self.type_of_weapon = sprite.type_of_weapon
         self.screen = screen
         self.location = Weapon.default_location
@@ -59,13 +63,11 @@ class Weapon(pygame.sprite.Sprite):
         pygame_image = pygame.image.fromstring(image.tobytes(), image.size, "RGB")
         screen.blit(pygame_image, location)
 
-    def rot_center(self, image, angle):
-        orig_rect = image.get_rect()
-        rot_image = pygame.transform.rotate(image, angle)
-        rot_rect = orig_rect.copy()
-        rot_rect.center = rot_image.get_rect().center
-        rot_image = rot_image.subsurface(rot_rect).copy()
-        return rot_image
+    def rotate_center(self, image, location, angle):
+
+        rotated_image = pygame.transform.rotate(image, angle)
+        new_rect = rotated_image.get_rect(center = image.get_rect(center=location).center)
+        return rotated_image, new_rect
 
     def turning_weapon(self, side_to_turn):
         turning_right = 1
@@ -74,10 +76,10 @@ class Weapon(pygame.sprite.Sprite):
         angle = 0
         while abs(angle) < abs(self.side - side_to_turn) * 90:
             angle += turning_right * 5
-            self.image = self.rot_center(pygame.image.fromstring(self.image.tobytes(), self.image.size, "RGB"), turning_right * 5)
-            bytes = pygame.image.fromstring(self.image.tobytes(), self.image.size, "RGB")
-            self.blit_pil_image(self.screen, bytes, self.location)
+            image_to_show, coords_to_blit_image = self.rotate_center(self.image, self.location, angle)
+            screen.blit(image_to_show, coords_to_blit_image[0:2])
             pygame.display.flip()
+            clock.tick(velocity // fps)
         self.side = side_to_turn
 
 

@@ -53,7 +53,6 @@ class Board:
                                               (self.left + cell[0] * self.cell_size, self.top + cell[1] * self.cell_size), 1, player, sprite_group_weapons)
 
     def remove_elem(self, cell):
-        print('cell', cell)
         removing_elem = self.board[cell[1]][cell[0]]
         self.board[cell[1]][cell[0]] = 0
         return removing_elem

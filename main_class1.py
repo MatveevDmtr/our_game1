@@ -1,6 +1,6 @@
 import pygame
 from PIL import Image
-SCREEN_SIZE = 1000, 700
+SCREEN_SIZE = 1250, 900
 clock = pygame.time.Clock()
 velocity = 240
 fps = 60
@@ -63,9 +63,13 @@ class Board:
 
     def reverse_board(self):
         list_x = []
-        for i in range(1, len(self.board) + 1):
-            list_x = self.board[(-1) * i]
+        for i in range(self.height - 1, -1, -1):
+            list_x.append(self.board[i])
         self.board = list_x
+        for line in self.board:
+            for elem in line:
+                if elem != 0:
+                    elem.location = (elem.location[0], 2 * self.top + (self.height - 1) * self.cell_size - elem.location[1])
 
     def render(self, screen):
         print('render')
@@ -116,12 +120,22 @@ class Board:
 
 class Buttons_in_game_process():
     def __init__(self):
-        font_size = 36
+        self.font_size = 28
+
+    def draw_next_step_button(self):
         font_color = pygame.Color('yellow')
-        font = pygame.font.Font(None, font_size)
+        font = pygame.font.Font(None, self.font_size)
         text = font.render('Следующий ход', True, font_color)
         text_w, text_h = text.get_rect()[2:]
-        self.button_next_step_left = to_center_text_in_horizontal(text_w, board.left + num_cells_in_line * size_of_cell)
+        self.button_next_step_left = to_center_text_in_horizontal(text_w, board.left + num_cells_in_line * size_of_cell, SCREEN_SIZE[0])
+        self.button_next_step_top = board.top + board.height * board.cell_size - text_h - 7
+        screen.fill(pygame.Color('blue'),
+                    pygame.Rect(self.button_next_step_left - 10, self.button_next_step_top - 5, text_w + 20,
+                                text_h + 10))
+        screen.blit(text, (self.button_next_step_left, self.button_next_step_top))
+        self.button_next_step_location = (self.button_next_step_left - 10, self.button_next_step_top - 5, self.button_next_step_left + text_w + 10,
+                                self.button_next_step_top + text_h + 5)
+        pygame.display.flip()
 
 class Weapon(pygame.sprite.Sprite):
     quit = False
@@ -275,11 +289,13 @@ def to_center_text_in_horizontal(text_w, x1, x2):
 
 
 board = Board(num_cells_in_line, num_cells_in_line)
+button_punnel_main_during_game = Buttons_in_game_process()
 
 
 def redraw_everything():
     screen.fill('black')
     board.render(screen)
+    button_punnel_main_during_game.draw_next_step_button()
 
 
 
@@ -289,12 +305,13 @@ screen = pygame.display.set_mode(SCREEN_SIZE)
 pygame.display.set_caption('Игра')
 screen.fill('black')
 board.add_elem(tank, (1, 2), 1)
+board.add_elem(tank, (10, 15), 1)
 #tank1 = Weapon(tank, screen, (100, 100), 1, sprite_group_weapons)
-redraw_everything()
 print(board.board)
 end_of_game = False
 while not(immediate_quit) and not(end_of_game):
     running = True
+    redraw_everything()
     while running:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -312,7 +329,14 @@ while not(immediate_quit) and not(end_of_game):
                         elem = board.board[cell_pressed[1]][cell_pressed[0]]
                         if elem:
                             elem.show_stats(True)
+                elif mouse_pos[0] in range(button_punnel_main_during_game.button_next_step_location[0],
+                                           button_punnel_main_during_game.button_next_step_location[2]) \
+                        and mouse_pos[1] in range(button_punnel_main_during_game.button_next_step_location[1],
+                                                  button_punnel_main_during_game.button_next_step_location[3]):
+                    running = False
+                    mouse_pos = (-1, -1)
         if Weapon.quit:
             running = False
             immediate_quit = True
+    board.reverse_board()
 pygame.quit()
